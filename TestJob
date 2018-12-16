@@ -1,0 +1,11 @@
+job('TestJob') {
+    scm {
+        git('https://github.com/jenasubhadev/JenkinsFile.git')
+    }
+    triggers {
+        scm('H/15 * * * *')
+    }
+    steps {
+        maven('-e clean test')
+    }
+}
