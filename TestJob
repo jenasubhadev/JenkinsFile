@@ -1,11 +1,39 @@
-job('TestJob') {
-    scm {
-        git('https://github.com/jenasubhadev/JenkinsFile.git')
+node{
+    stage('Maven SetUp')
+    {
+		sh '''rm -rf apache-maven-3.6.0-bin.tar.gz
+		rm -rf apache-maven-3.6.0
+		wget http://mirrors.wuchna.com/apachemirror/maven/maven-3/3.6.0/binaries/apache-maven-3.6.0-bin.tar.gz
+		tar xvf apache-maven-3.6.0-bin.tar.gz
+		export M2_HOME=/var/jenkins_home/workspace/Test/apache-maven-3.6.0
+		export M2=$M2_HOME/bin
+		export PATH=$M2:$PATH
+		mvn -version'''
     }
-    triggers {
-        scm('H/15 * * * *')
+    stage('Code Pull'){
+        git changelog: false, poll: false, url: 'https://github.com/jenasubhadev/simple-java-maven-app.git'
     }
-    steps {
-        maven('-e clean test')
+    stage('Code Compile')
+    {
+		sh '''
+		export M2_HOME=/var/jenkins_home/workspace/Test/apache-maven-3.6.0
+		export M2=$M2_HOME/bin
+		export PATH=$M2:$PATH
+		mvn clean install
+		'''
+
+    }
+    stage('Code Static Code Analysis'){
+
+        sh '''
+        export M2_HOME=/var/jenkins_home/workspace/Test/apache-maven-3.6.0
+		export M2=$M2_HOME/bin
+		export PATH=$M2:$PATH
+        mvn sonar:sonar \\
+		-Dsonar.projectKey=jenasubhadev_simple-java-maven-app \\
+		-Dsonar.organization=jenasubhadev-github \\
+		-Dsonar.host.url=https://sonarcloud.io \\
+		-Dsonar.login=62f69a27ff0c5addad96b11b67c49fbe1a80ed78
+		'''
     }
 }
